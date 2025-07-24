@@ -1,5 +1,5 @@
 import { useContext, useState } from "react";
-import { TodoContext } from "../context/TodoContext";
+import { TodoContext } from "../../context/TodoContext";
 
 function TodoForm() {
     //состояние будет привязано к полю ввода и будет меняться при изменении значения в поле ввода
