@@ -1,10 +1,6 @@
-import { useContext } from "react";
 import TodoItem from "./TodoItem";
-import { TodoContext } from "../../context/TodoContext";
 
-function TodoList() {
-    const { tasks } = useContext(TodoContext);
-
+function TodoList({ tasks }) {
     return (
         <ul className="list-group my-4">
             {tasks.map((task) => (

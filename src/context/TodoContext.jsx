@@ -1,9 +1,13 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext, useId } from "react";
+import { AuthContext } from "./AuthContext";
 
 //создание глобального контекста приложения
 export const TodoContext = createContext();
 
 function TodoProvider({ children }) {
+    const { currentUser } = useContext(AuthContext);
+    const todoIdPrefix = useId(); //базовый префикс id для всех задач
+
     //массив задач, по умолчанию пустой массив
     //это глобальное состояние, которое будет использоваться другими компонентами
     const [tasks, setTasks] = useState(() => {
@@ -21,16 +25,39 @@ function TodoProvider({ children }) {
     //добавление новой задачи
     const addTodo = (text) => {
         //к актуальным данным массива tasks добавляем новый объект
-        setTasks([...tasks, { id: Date.now(), text, completed: false }]);
+        setTasks([
+            ...tasks,
+            {
+                id: `${todoIdPrefix}-task-${Date.now()}`,
+                text,
+                status: "new",
+                user: null,
+            },
+        ]);
     };
 
-    //изменение статуса задачи
+    //изменение статуса задачи и закрепление пользователя(пользователь берет задачу в работу)
     const toggleTodo = (id) => {
         //находим задачу с Id, равным переданному и меняем в текущем объекте задачи статус на противоположный
         //массив с полученными задачами перезаписываем в состояние tasks
         setTasks(
             tasks.map((task) =>
-                task.id === id ? { ...task, completed: !task.completed } : task
+                task.id === id
+                    ? {
+                          ...task,
+                          status: "in-progress",
+                          user: currentUser.username,
+                      }
+                    : task
+            )
+        );
+    };
+
+    //завершение задачи
+    const completeTodo = (id) => {
+        setTasks(
+            tasks.map((task) =>
+                task.id === id ? { ...task, status: "done" } : task
             )
         );
     };
@@ -44,7 +71,7 @@ function TodoProvider({ children }) {
 
     return (
         <TodoContext.Provider
-            value={{ tasks, addTodo, toggleTodo, deleteTodo }}
+            value={{ tasks, addTodo, toggleTodo, completeTodo, deleteTodo }}
         >
             {children}
         </TodoContext.Provider>

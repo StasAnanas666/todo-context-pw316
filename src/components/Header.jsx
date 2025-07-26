@@ -79,7 +79,7 @@ function Header() {
                             </>
                         ) : (
                             <>
-                                <li className="nav-item ms-auto">
+                                <li className="nav-item ms-lg-auto">
                                     <NavLink className="nav-link" to="/login">
                                         Вход
                                     </NavLink>
