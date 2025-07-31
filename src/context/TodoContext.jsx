@@ -1,26 +1,31 @@
-import { createContext, useState, useEffect, useContext, useId } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import { AuthContext } from "./AuthContext";
 
 //создание глобального контекста приложения
 export const TodoContext = createContext();
 
 function TodoProvider({ children }) {
-    const { currentUser } = useContext(AuthContext);
-    const todoIdPrefix = useId(); //базовый префикс id для всех задач
+    const { currentUser, token } = useContext(AuthContext);
 
     //массив задач, по умолчанию пустой массив
     //это глобальное состояние, которое будет использоваться другими компонентами
-    const [tasks, setTasks] = useState(() => {
-        //загружаем задачи из localStorage
-        const savedTasks = localStorage.getItem("tasks");
-        //если данные в LocalStorage есть, иначе - пустой массив
-        return savedTasks ? JSON.parse(savedTasks) : [];
-    });
+    const [tasks, setTasks] = useState([]);
 
-    //вызывается при изменении состояния tasks
     useEffect(() => {
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-    }, [tasks]);
+        const getTasks = async () => {
+            const response = await fetch("http://localhost:8888/tasks", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setTasks(data.tasks);
+            }
+        };
+        getTasks();
+    }, []);
 
     //добавление новой задачи
     const addTodo = (text) => {
