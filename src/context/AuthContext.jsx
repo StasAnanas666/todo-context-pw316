@@ -3,14 +3,6 @@ import { createContext, useEffect, useState } from "react";
 const AuthContext = createContext();
 
 function AuthProvider({ children }) {
-    //зарегистрированные пользователи
-    const [users, setUsers] = useState(() => {
-        //получаем список пользователей из LocalStorage
-        const registeredUsers = localStorage.getItem("users");
-        //если данные есть, перезаписываем в состояние полученный массив пользователей, иначе пустой массив
-        return registeredUsers ? JSON.parse(registeredUsers) : [];
-    });
-
     //текущий аутентифицированный пользователь
     const [currentUser, setCurrentUser] = useState(() => {
         const savedUser = localStorage.getItem("currentUser");
@@ -23,10 +15,10 @@ function AuthProvider({ children }) {
         return savedStatus ? JSON.parse(savedStatus) : false;
     });
 
-    //сохранение списка пользователей при его изменении
-    useEffect(() => {
-        localStorage.setItem("users", JSON.stringify(users));
-    }, [users]);
+    const [token, setToken] = useState(() => {
+        const accessToken = localStorage.getItem("token");
+        return accessToken ? JSON.parse(accessToken) : false;
+    });
 
     //сохранение текущего пользователя при изменении
     useEffect(() => {
@@ -37,30 +29,33 @@ function AuthProvider({ children }) {
     useEffect(() => {
         localStorage.setItem("status", JSON.stringify(isAuthenticated));
     }, [isAuthenticated]);
+    //сохранение токена при его изменении
+    useEffect(() => {
+        localStorage.setItem("token", JSON.stringify(token));
+    }, [token]);
 
     //регистрация пользователя
-    const register = ({ username, email, password }) => {
-        let role;
-        //если зарегистрированных пользователей нет, то первый будет админом, иначе юзер
-        users.length === 0 ? role = "admin" : role = "user";
-        setUsers([
-            ...users,
-            { id: Date.now(), username, email, password, role },
-        ]);
+    const register = async ({ username, email, password }) => {
+        await fetch("http://localhost:8888/register", {
+            method: "POST",
+            body: JSON.stringify({ username, email, password }),
+        });
     };
 
     //аутентификация
-    const login = ({ email, password }) => {
-        //ищем пользователя по email и паролю
-        const user = users.find(
-            (u) => u.email === email && u.password === password
-        );
-        //если пользователь найден
-        if (user) {
-            //сохраняем как текущего
-            setCurrentUser(user);
+    const login = async ({ username, email, password }) => {
+        const response = await fetch("http://localhost:8888/login", {
+            method: "POST",
+            body: JSON.stringify({ username, email, password }),
+        });
+        //если запрос успешно выполнен
+        if (response.ok) {
+            const data = await response.json();
+            //сохраняем текущего пользователя
+            setCurrentUser(data.user);
             //меняем состояние аутентификации
             setIsAuthenticated(true);
+            setToken(data.token);
         }
     };
 
@@ -70,6 +65,8 @@ function AuthProvider({ children }) {
         setCurrentUser(null);
         //сбрасываем состояние аутентификации
         setIsAuthenticated(false);
+        //сбрасываем токен
+        setToken(null);
     };
 
     return (
