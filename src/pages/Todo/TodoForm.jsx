@@ -3,7 +3,9 @@ import { TodoContext } from "../../context/TodoContext";
 
 function TodoForm() {
     //состояние будет привязано к полю ввода и будет меняться при изменении значения в поле ввода
-    const [text, setText] = useState(""); //задача из поля ввода
+    const [title, setTitle] = useState(""); //задача из поля ввода
+    const [deadline, setDeadline] = useState("");
+    const [priority, setPriority] = useState("Low");
     const inputRef = useRef(null);
 
     //обращаемся к контексту TodoContext, достаем из него метод добавления задачи
@@ -13,8 +15,10 @@ function TodoForm() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        addTodo(text);
-        setText(""); //очистка формы
+        addTodo(title, deadline, priority);
+        setTitle(""); //очистка формы
+        setDeadline("");
+        setPriority("Low");
     };
 
     return (
@@ -24,10 +28,25 @@ function TodoForm() {
                     type="text"
                     className="form-control"
                     placeholder="Введите задачу..."
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     ref={inputRef}
                 />
+                <input
+                    type="date"
+                    className="form-control ms-3"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                />
+                <select
+                    className="form-select ms-3"
+                    value={priority}
+                    onChange={(e) => setPriority(e.target.value)}
+                >
+                    <option value="Low">Низкий</option>
+                    <option value="Medium">Средний</option>
+                    <option value="High">Высокий</option>
+                </select>
                 <button className="btn btn-outline-success ms-3" type="submit">
                     Добавить
                 </button>

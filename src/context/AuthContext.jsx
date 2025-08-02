@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
@@ -15,10 +16,7 @@ function AuthProvider({ children }) {
         return savedStatus ? JSON.parse(savedStatus) : false;
     });
 
-    const [token, setToken] = useState(() => {
-        const accessToken = localStorage.getItem("token");
-        return accessToken ? JSON.parse(accessToken) : false;
-    });
+    const navigate = useNavigate();
 
     //сохранение текущего пользователя при изменении
     useEffect(() => {
@@ -29,10 +27,6 @@ function AuthProvider({ children }) {
     useEffect(() => {
         localStorage.setItem("status", JSON.stringify(isAuthenticated));
     }, [isAuthenticated]);
-    //сохранение токена при его изменении
-    useEffect(() => {
-        localStorage.setItem("token", JSON.stringify(token));
-    }, [token]);
 
     //регистрация пользователя
     const register = async ({ username, email, password }) => {
@@ -61,7 +55,8 @@ function AuthProvider({ children }) {
             setCurrentUser(data.user);
             //меняем состояние аутентификации
             setIsAuthenticated(true);
-            setToken(data.token);
+            localStorage.setItem("token", data.token);
+            navigate("/");
         }
     };
 
@@ -72,7 +67,7 @@ function AuthProvider({ children }) {
         //сбрасываем состояние аутентификации
         setIsAuthenticated(false);
         //сбрасываем токен
-        setToken(null);
+        localStorage.removeItem("token");
     };
 
     return (

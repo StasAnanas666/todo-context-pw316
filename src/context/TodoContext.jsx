@@ -5,78 +5,122 @@ import { AuthContext } from "./AuthContext";
 export const TodoContext = createContext();
 
 function TodoProvider({ children }) {
-    const { currentUser, token } = useContext(AuthContext);
-
     //массив задач, по умолчанию пустой массив
-    //это глобальное состояние, которое будет использоваться другими компонентами
     const [tasks, setTasks] = useState([]);
 
+    const { currentUser } = useContext(AuthContext);
+    const token = localStorage.getItem("token");
+
+    //загрузка задач после аутентификации пользователя
     useEffect(() => {
-        const getTasks = async () => {
-            const response = await fetch("http://localhost:8888/tasks", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setTasks(data.tasks);
-            }
-        };
-        getTasks();
-    }, []);
+        if (currentUser) {
+            getTasks();
+        }
+    }, [currentUser]);
+
+    //получение всех задач
+    const getTasks = async () => {
+        const response = await fetch("http://localhost:8888/tasks", {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+            },
+        });
+        if (response.ok) {
+            const data = await response.json();
+            setTasks(data);
+        }
+    };
 
     //добавление новой задачи
-    const addTodo = (text) => {
-        //к актуальным данным массива tasks добавляем новый объект
-        setTasks([
-            ...tasks,
-            {
-                id: `${todoIdPrefix}-task-${Date.now()}`,
-                text,
-                status: "new",
-                user: null,
+    const addTodo = async (title, deadline, priority) => {
+        const response = await fetch("http://localhost:8888/tasks", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+                Accept: "application/json",
             },
-        ]);
+            body: JSON.stringify({ title, deadline, priority }),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data.message);
+            getTasks();
+        }
     };
 
     //изменение статуса задачи и закрепление пользователя(пользователь берет задачу в работу)
-    const toggleTodo = (id) => {
-        //находим задачу с Id, равным переданному и меняем в текущем объекте задачи статус на противоположный
-        //массив с полученными задачами перезаписываем в состояние tasks
-        setTasks(
-            tasks.map((task) =>
-                task.id === id
-                    ? {
-                          ...task,
-                          status: "in-progress",
-                          user: currentUser.username,
-                      }
-                    : task
-            )
+    const toggleTodo = async (id) => {
+        const response = await fetch(
+            `http://localhost:8888/tasks/active/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
         );
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data.message);
+            getTasks();
+        }
     };
 
     //завершение задачи
-    const completeTodo = (id) => {
-        setTasks(
-            tasks.map((task) =>
-                task.id === id ? { ...task, status: "done" } : task
-            )
+    const completeTodo = async(id) => {
+        const response = await fetch(
+            `http://localhost:8888/tasks/complete/${id}`,
+            {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
         );
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data.message);
+            getTasks();
+        }
     };
 
     //удаление задачи по id
-    const deleteTodo = (id) => {
-        //фильтруем в новый массив задачи, id которых не равен переданному
-        //массив с полученными задачами перезаписываем в состояние tasks
-        setTasks(tasks.filter((task) => task.id !== id));
+    const deleteTodo = async(id) => {
+        const response = await fetch(
+            `http://localhost:8888/tasks/${id}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                },
+            }
+        );
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data.message);
+            getTasks();
+        }
     };
 
     return (
         <TodoContext.Provider
-            value={{ tasks, addTodo, toggleTodo, completeTodo, deleteTodo }}
+            value={{
+                tasks,
+                getTasks,
+                addTodo,
+                toggleTodo,
+                completeTodo,
+                deleteTodo,
+            }}
         >
             {children}
         </TodoContext.Provider>

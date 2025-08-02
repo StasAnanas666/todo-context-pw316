@@ -13,13 +13,14 @@ function TodoItem({ task }) {
                     task.status === "done" ? "text-decoration-line-through" : ""
                 }
             >
-                {task.text}
+                {task.title}
             </span>
             <div>
                 {currentUser.role === "admin" ? (
                     <>
                         <span>
-                            Ответственный: {task.user ? task.user : "Нет"}
+                            Ответственный:{" "}
+                            {task.username ? task.username : "Нет"}
                         </span>
                         <button
                             onClick={() => deleteTodo(task.id)}

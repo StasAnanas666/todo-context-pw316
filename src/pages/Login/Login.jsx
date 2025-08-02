@@ -1,12 +1,10 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 
 function Login() {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const navigate = useNavigate();
 
     const { login } = useContext(AuthContext);
 
@@ -17,7 +15,6 @@ function Login() {
             setUsername("");
             setEmail("");
             setPassword("");
-            navigate("/"); //редирект на главную
         }
     };
 

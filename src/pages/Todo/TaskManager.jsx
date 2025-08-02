@@ -1,12 +1,11 @@
-import { useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { TodoContext } from "../../context/TodoContext";
 import { AuthContext } from "../../context/AuthContext";
 import TodoList from "./TodoList";
 
 function TaskManager() {
-    const { tasks } = useContext(TodoContext);
     const { currentUser } = useContext(AuthContext);
-
+    const { tasks } = useContext(TodoContext);
     //новые задачи
     const newTasks = tasks.filter((t) => t.status === "new");
 
@@ -18,8 +17,7 @@ function TaskManager() {
             ? tasks.filter((t) => t.status === "in-progress")
             : tasks.filter(
                   (t) =>
-                      t.status === "in-progress" &&
-                      t.user === currentUser.username
+                      t.status === "in-progress" && t.userid === currentUser.id
               );
 
     //выполненные задачи
@@ -27,7 +25,7 @@ function TaskManager() {
         currentUser.role === "admin"
             ? tasks.filter((t) => t.status === "done")
             : tasks.filter(
-                  (t) => t.status === "done" && t.user === currentUser.username
+                  (t) => t.status === "done" && t.userid === currentUser.id
               );
 
     return (
